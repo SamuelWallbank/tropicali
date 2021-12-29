@@ -1,19 +1,42 @@
 var gulp = require('gulp');
-var sass = require('gulp-sass');
-var cleanCss = require('gulp-clean-css');
-var sourcemaps = require('gulp-sourcemaps');
+// var sass = require('gulp-sass');
 
+// css
+var cleanCss = require('gulp-clean-css');
+var postcss = require('gulp-postcss');
+var sourcemaps = require('gulp-sourcemaps');
+var concat = require('gulp-concat');
+
+// browser refresh
 var browserSync = require('browser-sync').create();
 
+// images
 var imagemin = require("gulp-imagemin");
 
-sass.compiler = require('node-sass');
+// github
+var ghpages = require("gh-pages");
 
-gulp.task("sass", function () {
-    // we want to run sass "css/app.scss app.css --watch"
-  return gulp.src("src/css/app.scss")
+// sass.compiler = require('node-sass');
+
+// build script
+gulp.task("css", function () {
+  return gulp.src([
+      "src/css/reset.css",
+      "src/css/typography.css",
+      "src/css/app.css"
+  ])
     .pipe(sourcemaps.init())
-    .pipe(sass())
+    .pipe(
+        postcss([
+            require("autoprefixer"),
+            require("postcss-preset-env") ({
+                stage: 1,
+                browsers: ["IE 11", "last 2 versions"]
+            })
+        ])
+    )
+    // .pipe(sass())
+    .pipe(concat("app.css"))
     .pipe(
         cleanCss({
             compatibility: 'ie8'
@@ -49,26 +72,14 @@ gulp.task("watch", function () {
     })
 
     gulp.watch("src/*.html", ["html"]).on("change", browserSync.reload)
-    gulp.watch("src/css/app.scss", ["sass"])
+    gulp.watch("src/css/*", ["css"])
     gulp.watch("src/fonts/*", ["fonts"])
     gulp.watch("src/img/*", ["images"])
 })
 
-gulp.task('default', ["html", "sass", "fonts", "images", "watch"]);
+gulp.task("deploy", function() {
+    ghpages.publish("dist")
+})
 
+gulp.task('default', ["html", "css", "fonts", "images", "watch"]);
 
-
-// var gulp = require('gulp');
-// var sass = require('gulp-sass');
-
-// sass.compiler = require('node-sass');
-
-// gulp.task('default', function () {
-//   return gulp.src('assets/sass/app.scss')
-//     .pipe(sass().on('error', sass.logError))
-//     .pipe(gulp.dest('app.css'));
-// });
-
-// gulp.task('sass:watch', function () {
-//   gulp.watch('assets/sass/app.scss', ['sass']);
-// });
